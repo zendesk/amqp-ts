@@ -1031,6 +1031,7 @@ export class Queue {
           if (err) {
             reject(err);
           } else {
+            log.log("info", "Channel canceled.", { module: "amqp-ts" });
             delete this._consumerInitialized;
             delete this._consumer;
             delete this._consumerOptions;
