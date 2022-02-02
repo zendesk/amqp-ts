@@ -213,6 +213,10 @@ export class Connection extends EventEmitter {
     })
     .then(() => {
       this.rebuildPromise = undefined;
+    })
+    .catch((e) => {
+      this.rebuildPromise = undefined;
+      throw e;
     });
 
     return this.rebuildPromise;
