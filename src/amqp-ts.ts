@@ -1027,6 +1027,16 @@ export class Queue {
     };
 
     var activateConsumerWrapper = (msg: AmqpLib.Message) => {
+      if (!msg) {
+        log.error("Consumer cancel notification - Empty message detected, queue might be deleted and consumer need to be canceled.");
+        // On queue deletion, if consumers are connected, "consumer cancel notification" is triggered and notify a basic.cancel
+        // In this use case, amqplib will dispatch an empty msg that needs to be acknowledged, it will re-create the targeted queue.
+        // See https://github.com/amqp-node/amqplib/blob/v0.10.3/lib/channel.js#L495-L499
+        // If RabbitMQ is not available when acknowledging, it should raise channel closed error.
+        msg = new Message();
+        this._channel.ack(msg);
+      }
+
       try {
         var message = new Message(msg.content, msg.properties);
         message.fields = msg.fields;
