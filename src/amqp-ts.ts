@@ -1058,7 +1058,10 @@ export class Queue {
         });
       } catch (error) {
         /* istanbul ignore next */
-        log.error("Queue.onMessage consumer function returned error: " + error.message, { module: "amqp-ts", error });
+        const errorMessage = "Queue.onMessage consumer function returned error: " + error.message;
+        log.error(errorMessage, { module: "amqp-ts", error });
+        // Throw an exception so the client can reconnect
+        throw new Error(errorMessage);
       }
     };
 
