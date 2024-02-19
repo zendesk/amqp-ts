@@ -6,6 +6,7 @@
  * the inside of the enclosing namespace.
  */
 /// <reference types="node" />
+/// <reference types="node" />
 import * as AmqpLib from "amqplib/callback_api";
 import * as Promise from "bluebird";
 import { EventEmitter } from "events";
@@ -49,7 +50,7 @@ export declare class Connection extends EventEmitter {
     declareExchange(name: string, type?: string, options?: Exchange.DeclarationOptions): Exchange;
     declareQueue(name: string, options?: Queue.DeclarationOptions): Queue;
     declareTopology(topology: Connection.Topology): Promise<any>;
-    readonly getConnection: AmqpLib.Connection;
+    get getConnection(): AmqpLib.Connection;
 }
 export declare namespace Connection {
     interface ReconnectStrategy {
@@ -100,8 +101,8 @@ export declare class Exchange {
     _options: Exchange.DeclarationOptions;
     _deleting: Promise<void>;
     _closing: Promise<void>;
-    readonly name: string;
-    readonly type: string;
+    get name(): string;
+    get type(): string;
     constructor(connection: Connection, name: string, type?: string, options?: Exchange.DeclarationOptions);
     _initialize(): void;
     waitForConfirms(): any;
@@ -151,7 +152,7 @@ export declare class Queue {
     _consumerStopping: boolean;
     _deleting: Promise<Queue.DeleteResult>;
     _closing: Promise<void>;
-    readonly name: string;
+    get name(): string;
     constructor(connection: Connection, name: string, options?: Queue.DeclarationOptions);
     _initialize(): void;
     static _packMessageContent(content: any, options: any): Buffer;
