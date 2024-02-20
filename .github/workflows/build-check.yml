@@ -4,7 +4,7 @@ on:
 
 jobs:
   build-and-verify-js:
-    runs-on: [self-hosted, zendesk-stable]
+    runs-on: ubuntu-latest
     name: Build and Verify JS
     steps:
       - uses: zendesk/checkout@v3
