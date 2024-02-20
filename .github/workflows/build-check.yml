@@ -5,7 +5,7 @@ on:
 jobs:
   build-and-verify-js:
     runs-on: [self-hosted, zendesk-stable]
-    name: Test
+    name: Build and Verify JS
     steps:
       - uses: zendesk/checkout@v3
         name: Checkout
