@@ -2,11 +2,9 @@ name: Build and Verify JS
 on:
   pull_request:
 
-env:
-  NODE_VERSION: "16.13.2"
 jobs:
-  test:
-    runs-on: [self-hosted]
+  build-and-verify-js:
+    runs-on: [self-hosted, zendesk-stable]
     name: Test
     steps:
       - uses: zendesk/checkout@v3
