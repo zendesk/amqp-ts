@@ -520,7 +520,7 @@ export class Exchange {
       return new Promise(function (resolve, reject) {
         channel.waitForConfirms((err) => {
           if (!err) {
-            resolve(undefined);
+            resolve(null);
           } else {
             reject(err);
           }
