@@ -507,7 +507,7 @@ export class Exchange {
           }
         });
       }).catch((error) => {
-        log.warn("Channel TEST failure, error caused during connection!", { module: "amqp-ts", error });
+        log.warn("Channel failure, error caused during connection!", { module: "amqp-ts", error });
       });
     });
     this._connection._exchanges[this._name] = this;
