@@ -48,7 +48,7 @@ export class Connection extends EventEmitter {
   _exchanges: { [id: string]: Exchange };
   _queues: { [id: string]: Queue };
   _bindings: { [id: string]: Binding };
-  _topologySetup?: () => Promise<any>;
+  _topologySetup?: Promise<any>;
 
   constructor(
     url = "amqp://localhost",
@@ -213,6 +213,10 @@ export class Connection extends EventEmitter {
         log.debug("Rebuilding connection NOW.", { module: "amqp-ts" });
         this.rebuildConnection();
 
+        if (this._topologySetup) {
+          this._topologySetup();
+        }
+
         //re initialize exchanges, queues and bindings if they exist
         for (var exchangeId in this._exchanges) {
           var exchange = this._exchanges[exchangeId];
@@ -296,24 +300,31 @@ export class Connection extends EventEmitter {
    * return promise that fulfills after all defined exchanges, queues and bindings are initialized
    */
   completeConfiguration(): Promise<any> {
-    var promises: Promise<any>[] = [];
-    promises.push(this.setupTopology);
-    for (var exchangeId in this._exchanges) {
-      var exchange: Exchange = this._exchanges[exchangeId];
-      promises.push(exchange.initialized);
-    }
-    for (var queueId in this._queues) {
-      var queue: Queue = this._queues[queueId];
-      promises.push(queue.initialized);
-      if (queue._consumerInitialized) {
-        promises.push(queue._consumerInitialized);
+    const configurationSetup = () => {
+      var promises: Promise<any>[] = [];
+      for (var exchangeId in this._exchanges) {
+        var exchange: Exchange = this._exchanges[exchangeId];
+        promises.push(exchange.initialized);
       }
+      for (var queueId in this._queues) {
+        var queue: Queue = this._queues[queueId];
+        promises.push(queue.initialized);
+        if (queue._consumerInitialized) {
+          promises.push(queue._consumerInitialized);
+        }
+      }
+      for (var bindingId in this._bindings) {
+        var binding: Binding = this._bindings[bindingId];
+        promises.push(binding.initialized);
+      }
+      return Promise.all(promises);
+    };
+
+    if (this._topologySetup) {
+      return this._topologySetup.then(configurationSetup);
     }
-    for (var bindingId in this._bindings) {
-      var binding: Binding = this._bindings[bindingId];
-      promises.push(binding.initialized);
-    }
-    return Promise.all(promises);
+
+    return configurationSetup();
   }
 
   /**
@@ -372,6 +383,12 @@ export class Connection extends EventEmitter {
             } else {
               setup(channel)
                 .then(() => {
+                  channel.close().then((err) => {
+                    if (err) {
+                      reject(err);
+                    }
+                    resolve(null);
+                  });
                   resolve(null);
                 })
                 .catch((error) => {
