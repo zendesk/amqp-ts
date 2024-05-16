@@ -31,6 +31,7 @@ export declare class Connection extends EventEmitter {
     _bindings: {
         [id: string]: Binding;
     };
+    _topologySetup?: Promise<any>;
     constructor(url?: string, socketOptions?: any, reconnectStrategy?: Connection.ReconnectStrategy);
     private rebuildConnection;
     private tryToConnect;
@@ -48,6 +49,7 @@ export declare class Connection extends EventEmitter {
     deleteConfiguration(): Promise<any>;
     declareExchange(name: string, type?: string, options?: Exchange.DeclarationOptions): Exchange;
     declareQueue(name: string, options?: Queue.DeclarationOptions): Queue;
+    setupTopology(setup: (channel: AmqpLib.ConfirmChannel) => Promise<any>): any;
     declareTopology(topology: Connection.Topology): Promise<any>;
     readonly getConnection: AmqpLib.Connection;
 }
