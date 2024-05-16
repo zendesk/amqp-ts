@@ -213,44 +213,50 @@ export class Connection extends EventEmitter {
         log.debug("Rebuilding connection NOW.", { module: "amqp-ts" });
         this.rebuildConnection();
 
-        if (this._topologySetup) {
-          this._topologySetup();
-        }
-
-        //re initialize exchanges, queues and bindings if they exist
-        for (var exchangeId in this._exchanges) {
-          var exchange = this._exchanges[exchangeId];
-          log.debug("Re-initialize Exchange '" + exchange._name + "'.", {
-            module: "amqp-ts",
-          });
-          exchange._initialize();
-        }
-        for (var queueId in this._queues) {
-          var queue = this._queues[queueId];
-          var consumer = queue._consumer;
-          log.debug("Re-initialize queue '" + queue._name + "'.", {
-            module: "amqp-ts",
-          });
-          queue._initialize();
-          if (consumer) {
+        const configSetup = () => {
+          //re initialize exchanges, queues and bindings if they exist
+          for (var exchangeId in this._exchanges) {
+            var exchange = this._exchanges[exchangeId];
+            log.debug("Re-initialize Exchange '" + exchange._name + "'.", {
+              module: "amqp-ts",
+            });
+            exchange._initialize();
+          }
+          for (var queueId in this._queues) {
+            var queue = this._queues[queueId];
+            var consumer = queue._consumer;
+            log.debug("Re-initialize queue '" + queue._name + "'.", {
+              module: "amqp-ts",
+            });
+            queue._initialize();
+            if (consumer) {
+              log.debug(
+                "Re-initialize consumer for queue '" + queue._name + "'.",
+                { module: "amqp-ts" }
+              );
+              queue._initializeConsumer();
+            }
+          }
+          for (var bindingId in this._bindings) {
+            var binding = this._bindings[bindingId];
             log.debug(
-              "Re-initialize consumer for queue '" + queue._name + "'.",
+              "Re-initialize binding from '" +
+                binding._source._name +
+                "' to '" +
+                binding._destination._name +
+                "'.",
               { module: "amqp-ts" }
             );
-            queue._initializeConsumer();
+            binding._initialize();
           }
-        }
-        for (var bindingId in this._bindings) {
-          var binding = this._bindings[bindingId];
-          log.debug(
-            "Re-initialize binding from '" +
-              binding._source._name +
-              "' to '" +
-              binding._destination._name +
-              "'.",
-            { module: "amqp-ts" }
-          );
-          binding._initialize();
+        };
+
+        if (this._topologySetup) {
+          this._topologySetup().then(() => {
+            configSetup();
+          });
+        } else {
+          configSetup();
         }
 
         return new Promise<void>((resolve, reject) => {
@@ -383,12 +389,6 @@ export class Connection extends EventEmitter {
             } else {
               setup(channel)
                 .then(() => {
-                  channel.close().then((err) => {
-                    if (err) {
-                      reject(err);
-                    }
-                    resolve(null);
-                  });
                   resolve(null);
                 })
                 .catch((error) => {
